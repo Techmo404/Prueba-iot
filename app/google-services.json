@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "953033858335",
+    "project_id": "prueba-iot-25217",
+    "storage_bucket": "prueba-iot-25217.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:953033858335:android:dc2323370ae47af8e1242a",
+        "android_client_info": {
+          "package_name": "com.example.prueba_iot"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC4l0oUcRkfZw80h6TfXxB7xE55h7I3Dek"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
