@@ -1,83 +1,78 @@
 package com.example.prueba_iot
 
-import android.graphics.Paint
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
+import android.widget.ImageButton
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
 class TodoAdapter(
-    private val onTodoChecked: (Todo, Boolean) -> Unit
+    private val onTodoChecked: (Todo, Boolean) -> Unit,
+    private val onEditTodo: (Todo) -> Unit,
+    private val onDisableTodo: (Todo) -> Unit,
+    private val onDeleteTodo: (Todo) -> Unit
 ) : RecyclerView.Adapter<TodoAdapter.TodoViewHolder>() {
 
-    private val todos = mutableListOf<Todo>()
+    private var todos: List<Todo> = emptyList()
 
-    class TodoViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val textView: TextView = itemView.findViewById(R.id.textView)
-        val checkBox: CheckBox = itemView.findViewById(R.id.checkBox)
+    fun updateTodos(newList: List<Todo>) {
+        todos = newList
+        notifyDataSetChanged()
+    }
+
+    inner class TodoViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val checkBox: CheckBox = view.findViewById(R.id.checkBox)
+        val textView: TextView = view.findViewById(R.id.textView)
+        val editButton: ImageButton = view.findViewById(R.id.editButton)
+        val disableButton: ImageButton = view.findViewById(R.id.disableButton)
+        val deleteButton: ImageButton = view.findViewById(R.id.deleteButton)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TodoViewHolder {
-        val itemView = LayoutInflater.from(parent.context)
+        val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_todo, parent, false)
-        return TodoViewHolder(itemView)
-    }
-
-    override fun onBindViewHolder(holder: TodoViewHolder, position: Int) {
-        val currentTodo = todos[position]
-
-        holder.textView.text = currentTodo.text
-        holder.checkBox.isChecked = currentTodo.completed
-
-        // Aplicar estilo de tachado si está completado
-        if (currentTodo.completed) {
-            holder.textView.paintFlags = holder.textView.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
-        } else {
-            holder.textView.paintFlags = holder.textView.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
-        }
-
-        // Remover listeners previos para evitar duplicados
-        holder.checkBox.setOnCheckedChangeListener(null)
-
-        // Configurar nuevo listener
-        holder.checkBox.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked != currentTodo.completed) {
-                Log.d("TodoAdapter", "Checkbox changed for ${currentTodo.text}: $isChecked")
-                onTodoChecked(currentTodo, isChecked)
-            }
-        }
+        return TodoViewHolder(view)
     }
 
     override fun getItemCount(): Int = todos.size
 
-    fun updateTodos(newTodos: List<Todo>) {
-        Log.d("TodoAdapter", "Updating todos. New count: ${newTodos.size}")
-        todos.clear()
-        todos.addAll(newTodos)
-        notifyDataSetChanged()
-    }
+    override fun onBindViewHolder(holder: TodoViewHolder, position: Int) {
+        val currentTodo = todos[position]
 
-    fun addTodo(todo: Todo) {
-        todos.add(0, todo)
-        notifyItemInserted(0)
-    }
+        // Texto
+        holder.textView.text = currentTodo.text
 
-    fun updateTodo(updatedTodo: Todo) {
-        val index = todos.indexOfFirst { it.id == updatedTodo.id }
-        if (index != -1) {
-            todos[index] = updatedTodo
-            notifyItemChanged(index)
+        // Estado completado
+        holder.checkBox.setOnCheckedChangeListener(null)
+        holder.checkBox.isChecked = currentTodo.completed
+        holder.checkBox.setOnCheckedChangeListener { _, isChecked ->
+            onTodoChecked(currentTodo, isChecked)
         }
-    }
 
-    fun removeTodo(todoId: String) {
-        val index = todos.indexOfFirst { it.id == todoId }
-        if (index != -1) {
-            todos.removeAt(index)
-            notifyItemRemoved(index)
+        // Si está deshabilitado, ponerlo visualmente gris
+        if (!currentTodo.enabled) {
+            holder.textView.alpha = 0.4f
+            holder.checkBox.isEnabled = false
+            holder.editButton.isEnabled = false
+        } else {
+            holder.textView.alpha = 1f
+            holder.checkBox.isEnabled = true
+            holder.editButton.isEnabled = true
+        }
+
+        // Botones
+        holder.editButton.setOnClickListener {
+            onEditTodo(currentTodo)
+        }
+
+        holder.disableButton.setOnClickListener {
+            onDisableTodo(currentTodo)
+        }
+
+        holder.deleteButton.setOnClickListener {
+            onDeleteTodo(currentTodo)
         }
     }
 }
