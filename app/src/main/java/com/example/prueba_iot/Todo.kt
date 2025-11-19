@@ -1,5 +1,6 @@
 package com.example.prueba_iot
 
+
 import com.google.firebase.firestore.ServerTimestamp
 import java.util.Date
 
@@ -8,6 +9,5 @@ data class Todo(
     val text: String = "",
     val completed: Boolean = false,
     val userId: String = "",
-    val enabled: Boolean = true,
     @ServerTimestamp val createdAt: Date? = null
 )
