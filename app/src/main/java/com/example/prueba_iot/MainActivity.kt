@@ -1,200 +1,102 @@
 package com.example.prueba_iot
 
-import android.content.Intent
+import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
+import android.content.Intent
 
 class MainActivity : AppCompatActivity() {
 
-    companion object {
-        private const val TAG = "MainActivity"
-    }
-
-    // Firebase
-    private lateinit var auth: FirebaseAuth
-    private lateinit var db: FirebaseFirestore
-
-    // Views
-    private lateinit var recyclerView: RecyclerView
-    private lateinit var todoEditText: EditText
+    private lateinit var objectEditText: EditText
+    private lateinit var priceEditText: EditText
+    private lateinit var qtyEditText: EditText
     private lateinit var addButton: Button
-    private lateinit var signOutButton: Button
+    private lateinit var recyclerView: RecyclerView
 
-    // UI/State
-    private lateinit var todoAdapter: TodoAdapter
-    private var todosListener: ListenerRegistration? = null
+    private lateinit var adapter: TodoAdapter
+    private val db = FirebaseFirestore.getInstance()
+    private val user = FirebaseAuth.getInstance().currentUser
+    private var expenses = mutableListOf<Expense>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        auth = FirebaseAuth.getInstance()
-        db = FirebaseFirestore.getInstance()
-
-        // Verificar autenticación ANTES de inflar el layout si vas a navegar
-        if (auth.currentUser == null) {
-            navigateToLogin()
-            return
-        }
-
         setContentView(R.layout.activity_main)
-        initViews()
-        setupRecyclerView()
-        setupClickListeners()
-        loadTodos()
 
-        Log.d(TAG, "Usuario autenticado: ${auth.currentUser?.email}")
-    }
-
-    private fun initViews() {
-        recyclerView = findViewById(R.id.recyclerView)
-        todoEditText = findViewById(R.id.todoEditText)
+        objectEditText = findViewById(R.id.objectEditText)
+        priceEditText = findViewById(R.id.priceEditText)
+        qtyEditText = findViewById(R.id.qtyEditText)
         addButton = findViewById(R.id.addButton)
-        signOutButton = findViewById(R.id.signOutButton)
-    }
+        recyclerView = findViewById(R.id.recyclerView)
 
-    private fun setupRecyclerView() {
+        adapter = TodoAdapter(expenses)
         recyclerView.layoutManager = LinearLayoutManager(this)
-        // El adaptador recibe un callback para marcar completado
-        todoAdapter = TodoAdapter { todo, isChecked ->
-            updateTodoCompleted(todo, isChecked)
+        recyclerView.adapter = adapter
+
+        // 🔹 Botón cerrar sesión correctamente
+        findViewById<Button>(R.id.signOutButton).setOnClickListener {
+            FirebaseAuth.getInstance().signOut()
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
         }
-        recyclerView.adapter = todoAdapter
-        Log.d(TAG, "RecyclerView configurado")
+
+        loadExpenses()
+
+        addButton.setOnClickListener {
+            addExpense()
+        }
     }
 
-    private fun setupClickListeners() {
-        addButton.setOnClickListener { addNewTodo() }
-        signOutButton.setOnClickListener { signOut() }
-    }
+    private fun addExpense() {
+        val obj = objectEditText.text.toString().trim()
+        val rawPrice = priceEditText.text.toString().trim()
+        val qty = qtyEditText.text.toString().trim().toIntOrNull() ?: 1
 
-    private fun addNewTodo() {
-        val todoText = todoEditText.text.toString().trim()
-        if (todoText.isEmpty()) {
-            Toast.makeText(this, "Por favor ingresa una tarea", Toast.LENGTH_SHORT).show()
+        if (obj.isEmpty() || rawPrice.isEmpty()) {
+            Toast.makeText(this, "Completa todos los campos", Toast.LENGTH_SHORT).show()
             return
         }
 
-        val userId = auth.currentUser?.uid ?: return
+        // 🔹 Limpia puntos y comas
+        val cleanPrice = rawPrice.replace(".", "").replace(",", "")
+        val price = cleanPrice.toDoubleOrNull() ?: 0.0
 
-        val todo = hashMapOf(
-            "text" to todoText,
-            "completed" to false,
-            "userId" to userId,
-            "createdAt" to FieldValue.serverTimestamp()
+        val id = db.collection("expenses").document().id
+
+        val expense = Expense(
+            id = id,
+            `object` = obj,
+            price = price,
+            qty = qty,
+            userId = user!!.uid,
         )
 
-        Log.d(TAG, "Agregando nuevo todo: $todoText")
-
-        db.collection("todos")
-            .add(todo)
-            .addOnSuccessListener { documentReference ->
-                Log.d(TAG, "Todo agregado exitosamente con ID: ${documentReference.id}")
-                todoEditText.text.clear()
-                Toast.makeText(this, "Tarea agregada", Toast.LENGTH_SHORT).show()
-                // Crear un item local con el ID retornado para permitir actualizarlo de inmediato
-                val localTodo = Todo(
-                    id = documentReference.id,
-                    text = todoText,
-                    completed = false,
-                    userId = userId,
-                    createdAt = null
-                )
-                // Añadir al adaptador para que el usuario pueda interactuar (ej. marcar completado)
-                todoAdapter.addTodo(localTodo)
-            }
-            .addOnFailureListener { e ->
-                Log.e(TAG, "Error al agregar todo", e)
-                Toast.makeText(this, "Error al agregar tarea: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-    }
-
-    private fun updateTodoCompleted(todo: Todo, isCompleted: Boolean) {
-        if (todo.id.isEmpty()) {
-            Log.e(TAG, "Error: ID del todo está vacío")
-            return
-        }
-
-        Log.d(TAG, "Actualizando todo ${todo.id}: completed=$isCompleted")
-
-        db.collection("todos")
-            .document(todo.id)
-            .update("completed", isCompleted)
+        db.collection("expenses").document(id).set(expense)
             .addOnSuccessListener {
-                Log.d(TAG, "Todo actualizado exitosamente")
-            }
-            .addOnFailureListener { e ->
-                Log.e(TAG, "Error al actualizar todo", e)
-                Toast.makeText(this, "Error al actualizar: ${e.message}", Toast.LENGTH_SHORT).show()
+                objectEditText.text.clear()
+                priceEditText.text.clear()
+                qtyEditText.text.clear()
+                Toast.makeText(this, "Agregado!", Toast.LENGTH_SHORT).show()
             }
     }
 
-    private fun loadTodos() {
-        val userId = auth.currentUser?.uid ?: return
-        Log.d(TAG, "Cargando todos para usuario: $userId")
-
-        // Remover listener anterior si existe
-        todosListener?.remove()
-
-        todosListener = db.collection("todos")
-            .whereEqualTo("userId", userId)
+    private fun loadExpenses() {
+        db.collection("expenses")
+            .whereEqualTo("userId", user?.uid)
             .orderBy("createdAt", Query.Direction.DESCENDING)
-            .addSnapshotListener { snapshots, error ->
-                if (error != null) {
-                    Log.e(TAG, "Error al escuchar cambios", error)
-                    Toast.makeText(this, "Error: ${error.message}", Toast.LENGTH_SHORT).show()
-                    return@addSnapshotListener
-                }
-
-                if (snapshots == null) {
-                    Log.w(TAG, "Snapshots es null")
-                    return@addSnapshotListener
-                }
-
-                val todoList = snapshots.documents.mapNotNull { doc ->
-                    try {
-                        doc.toObject(Todo::class.java)?.copy(id = doc.id)
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Error al parsear documento ${doc.id}", e)
-                        null
-                    }
-                }
-
-                Log.d(TAG, "Todos cargados: ${todoList.size} items")
-                // Actualizar adaptador
-                todoAdapter.updateTodos(todoList)
-
-                if (todoList.isEmpty()) {
-                    Toast.makeText(this, "No hay tareas. ¡Agrega una!", Toast.LENGTH_SHORT).show()
+            .addSnapshotListener { snapshot, _ ->
+                if (snapshot != null) {
+                    expenses = snapshot.toObjects(Expense::class.java).toMutableList()
+                    adapter.update(expenses)
                 }
             }
-    }
-
-    private fun signOut() {
-        Log.d(TAG, "Cerrando sesión")
-        todosListener?.remove()
-        auth.signOut()
-        navigateToLogin()
-    }
-
-    private fun navigateToLogin() {
-        startActivity(Intent(this, LoginActivity::class.java))
-        finish()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        todosListener?.remove()
-        todosListener = null
     }
 }
+

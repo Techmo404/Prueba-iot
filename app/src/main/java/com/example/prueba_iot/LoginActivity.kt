@@ -31,17 +31,14 @@ class LoginActivity : AppCompatActivity() {
                 auth.signInWithEmailAndPassword(email, password)
                     .addOnCompleteListener(this) { task ->
                         if (task.isSuccessful) {
-                            val user = auth.currentUser
                             startActivity(Intent(this, MainActivity::class.java))
                             finish()
                         } else {
-                            Toast.makeText(baseContext, "Authentication failed.",
-                                Toast.LENGTH_SHORT).show()
+                            Toast.makeText(baseContext, "Authentication failed.", Toast.LENGTH_SHORT).show()
                         }
                     }
             } else {
-                Toast.makeText(baseContext, "Please fill all fields.",
-                    Toast.LENGTH_SHORT).show()
+                Toast.makeText(baseContext, "Please fill all fields.", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -53,17 +50,14 @@ class LoginActivity : AppCompatActivity() {
                 auth.createUserWithEmailAndPassword(email, password)
                     .addOnCompleteListener(this) { task ->
                         if (task.isSuccessful) {
-                            val user = auth.currentUser
                             startActivity(Intent(this, MainActivity::class.java))
                             finish()
                         } else {
-                            Toast.makeText(baseContext, "Authentication failed.",
-                                Toast.LENGTH_SHORT).show()
+                            Toast.makeText(baseContext, "Authentication failed.", Toast.LENGTH_SHORT).show()
                         }
                     }
             } else {
-                Toast.makeText(baseContext, "Please fill all fields.",
-                    Toast.LENGTH_SHORT).show()
+                Toast.makeText(baseContext, "Please fill all fields.", Toast.LENGTH_SHORT).show()
             }
         }
     }
