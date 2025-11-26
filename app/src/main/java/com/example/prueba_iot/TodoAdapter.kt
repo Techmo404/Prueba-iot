@@ -10,7 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 
 class TodoAdapter(private var expenseList: MutableList<Expense>) :
     RecyclerView.Adapter<TodoAdapter.TodoViewHolder>() {
-
+    // Busca y almacena los datos
     inner class TodoViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val checkBox: CheckBox = itemView.findViewById(R.id.checkBox)
         val objectTextView: TextView = itemView.findViewById(R.id.objectTextView)
@@ -41,7 +41,7 @@ class TodoAdapter(private var expenseList: MutableList<Expense>) :
     }
 
     override fun getItemCount() = expenseList.size
-
+    // Permite actualizar la lista
     fun update(newList: MutableList<Expense>) {
         expenseList = newList
         notifyDataSetChanged()

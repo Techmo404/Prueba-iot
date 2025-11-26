@@ -26,6 +26,7 @@ class MainActivity : AppCompatActivity() {
     private val user = FirebaseAuth.getInstance().currentUser
     private var expenses = mutableListOf<Expense>()
 
+    // Restaurar estado del texto tachado
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -54,6 +55,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // Obtencion de datos de el propducto
     private fun addExpense() {
         val obj = objectEditText.text.toString().trim()
         val rawPrice = priceEditText.text.toString().trim()

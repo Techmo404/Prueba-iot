@@ -20,7 +20,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Botón salir redondo con texto -->
+    <!-- Botón salir  -->
     <Button
         android:id="@+id/signOutButton"
         android:layout_width="70dp"
@@ -54,7 +54,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Inputs estilo moderno -->
+    <!-- Input de objeto -->
     <EditText
         android:id="@+id/objectEditText"
         android:layout_width="0dp"
@@ -70,7 +70,7 @@
         app:layout_constraintBottom_toTopOf="@id/priceEditText"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
-
+    <!-- input de precio -->
     <EditText
         android:id="@+id/priceEditText"
         android:layout_width="0dp"
@@ -87,7 +87,7 @@
         app:layout_constraintBottom_toTopOf="@id/qtyEditText"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
-
+    <!-- input de cantidad -->
     <EditText
         android:id="@+id/qtyEditText"
         android:layout_width="0dp"
@@ -105,7 +105,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- Botón agregar -->
+    <!-- Boton agregar -->
     <Button
         android:id="@+id/addButton"
         android:layout_width="wrap_content"

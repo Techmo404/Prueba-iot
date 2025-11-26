@@ -3,6 +3,7 @@ package com.example.prueba_iot
 import com.google.firebase.firestore.ServerTimestamp
 import java.util.Date
 
+// Datos del modelo producto
 data class Expense(
     val id: String = "",
     val `object`: String = "",
